@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<body onload='init()'>
+<canvas id="myCanvas" width="380" height="380">
+</canvas>
+<button onclick="strikerLine()">click</button>
+<button onclick="setShoot()"> shoot </button>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script>
+
+var c;
+var ctx;
+var radius = 7;
+var shoot;
+var showLine;
+var dx;
+var dy;
+var lineX;
+var lineY;
+var strikerX;//striker_coordinates
+var strikerY;//striker_coordinates
+var friction = 0.999;
+var coin1X;
+var coin1Y;
+function clear() {
+ ctx.clearRect(0, 0, 500, 500);
+}
+
+function drawBoard(){
+
+	
+	<!-- outer rectangle -->
+	ctx.fillStyle="#800000";
+	ctx.fillRect(18, 18, 380, 380);
+	
+	<!-- inner rounded rectangle -->
+	ctx.beginPath();
+	ctx.moveTo(60, 40);
+	ctx.lineTo(320,40);
+	ctx.arcTo(360, 40, 360, 80, 10);
+	ctx.lineTo(360, 320);
+	ctx.arcTo(360, 360, 320, 360, 10);
+	ctx.lineTo(80, 360);
+	ctx.arcTo(40, 360, 40, 320, 10);
+	ctx.lineTo(40, 80);
+	ctx.arcTo(40, 40, 80, 40, 10);
+	ctx.fillStyle = "#F3E5AB";
+	ctx.fill();
+
+	<!-- top left hole -->
+	ctx.beginPath();
+	ctx.arc(51,51,12,0,2*Math.PI);
+	ctx.stroke();
+	ctx.fillStyle="#000000";
+	ctx.fill();
+	<!-- top right corner hole -->
+	ctx.beginPath();
+	ctx.arc(349,51,12,0,2*Math.PI);
+	ctx.stroke();
+	ctx.fill();
+	<!-- bottom left corner hole -->
+	ctx.beginPath();
+	ctx.arc(51,349,12,0,2*Math.PI);
+	ctx.stroke();
+	ctx.fill();
+	<!-- bottom right corner hole -->
+	ctx.beginPath();
+	ctx.arc(349,349,12,0,2*Math.PI);
+	ctx.stroke();
+	ctx.fill();
+
+	
+	ctx.beginPath();
+	ctx.arc(90,90,3,0,2*Math.PI);
+	ctx.stroke();
+
+	<!-- top right -->
+	ctx.beginPath();
+	ctx.arc(310,90,3,0,2*Math.PI);
+	ctx.stroke();
+
+	<!-- bottom left -->
+	ctx.beginPath();
+	ctx.arc(90,310,3,0,2*Math.PI);
+	ctx.stroke();
+
+	<!-- bottom right -->
+	ctx.beginPath();
+	ctx.arc(310,310,3,0,2*Math.PI);
+	ctx.stroke();
+	<!-- end -->
+
+
+
+	<!-- striker area west -->
+	<!-- start -->
+	ctx.beginPath();
+	ctx.arc(83,98,radius,0,2*Math.PI);
+	ctx.arc(83,302,radius,0,2*Math.PI);
+	ctx.fillStyle="#800000";
+	ctx.fill();
+	ctx.moveTo(76,302);
+	ctx.lineTo(76,98);
+	ctx.stroke();
+
+
+<!-- end -->
+
+	
+	<!-- striker area east -->
+	<!-- start -->
+	ctx.beginPath();
+	ctx.arc(317,98,radius,0,2*Math.PI);
+	ctx.arc(317,302,radius,0,2*Math.PI);
+	ctx.fillStyle="#800000";
+	ctx.fill();
+	ctx.moveTo(310,302);
+	ctx.lineTo(310,98);
+	ctx.stroke();
+
+	<!-- end -->
+
+
+	<!-- striker area north -->
+	<!-- start -->
+	ctx.beginPath();
+	ctx.arc(97,82,radius,Math.PI/2,3*Math.PI);
+	ctx.arc(302,82,radius,Math.PI/2,3*Math.PI);
+	ctx.fillStyle="#800000";
+	ctx.fill();
+	ctx.moveTo(302,75);
+	ctx.lineTo(97,75);
+	ctx.stroke();
+
+	<!-- end -->
+
+	<!-- striker area south -->
+	<!-- start -->
+	ctx.beginPath();
+	ctx.arc(97,318,radius,Math.PI/2,3*Math.PI);
+	ctx.arc(302,318,radius,Math.PI/2,3*Math.PI);
+	ctx.fillStyle="#800000";
+	ctx.fill();
+	ctx.moveTo(302,311);
+	ctx.lineTo(97,311);
+	ctx.stroke();
+
+	<!-- end -->
+
+	<!-- center bigger circles-->
+	ctx.beginPath();
+	ctx.arc(200,200,43,0,2*Math.PI);
+	ctx.fillStyle="#800000";
+	ctx.fill();
+
+	ctx.moveTo(240,200);
+	ctx.arc(200,200,40,0,2*Math.PI);
+	ctx.fillStyle="#F3E5AB";
+	ctx.fill();
+
+	ctx.moveTo(248,200);
+	//ctx.arc(200,200,47,0,2*Math.PI);
+	ctx.stroke();
+	<!-- end -->
+
+	<!-- center smaller circles -->
+	ctx.beginPath();
+	ctx.arc(200,200,8,0,2*Math.PI);
+	ctx.fillStyle="#800000";
+	//ctx.fillStyle="#000000";
+	ctx.fill();
+
+
+	<!-- diagonal line north-west -->
+	ctx.beginPath();
+	ctx.arc(130,130,20,3*Math.PI/2,Math.PI);
+	ctx.moveTo(75,75);
+	ctx.lineTo(145,145);
+	<!-- arrow on top corner -->
+	ctx.moveTo(75,75);
+	ctx.lineTo(80,75);
+	ctx.moveTo(75,75);
+	ctx.lineTo(75,80);
+	ctx.stroke();
+
+	<!-- diagonal line south-west -->
+	ctx.beginPath();
+	ctx.arc(130,270,20,Math.PI,Math.PI/2);
+	ctx.moveTo(75,325);
+	ctx.lineTo(145,255);
+	<!-- arrow on bottom corner of line -->
+	ctx.moveTo(75,325);
+	ctx.lineTo(75,320);
+	ctx.moveTo(75,325);
+	ctx.lineTo(80,325);
+	ctx.stroke();
+
+	<!-- diagonal line north-east -->
+	ctx.beginPath();
+	ctx.arc(270,270,20,Math.PI/2,2*Math.PI);
+	ctx.moveTo(325,325);
+	ctx.lineTo(255,255);
+	<!-- arrow on top corner -->
+	ctx.moveTo(325,325);
+	ctx.lineTo(325,320);
+	ctx.moveTo(325,325);
+	ctx.lineTo(320,325);
+	ctx.stroke();
+
+
+	<!-- diagonal line north-east -->
+	ctx.beginPath();
+	ctx.arc(270,130,20,0,3*Math.PI/2);
+	ctx.moveTo(325,75);
+	ctx.lineTo(255,145);
+	<!-- arrow on top corner -->
+	ctx.moveTo(325,75);
+	ctx.lineTo(320,75);
+	ctx.moveTo(325,75);
+	ctx.lineTo(325,80);
+	ctx.stroke();
+
+}
+
+function drawStriker(x, y){
+	//change the look of striker
+	var c1 = document.getElementById("myCanvas");
+	var ctx1 = c1.getContext("2d");
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0, 2*Math.PI);
+	ctx.fillStyle="#435918";
+	ctx.fill();
+	strikerX=x;
+	strikerY=y;
+	
+}
+
+function drawCoin(x, y){
+	//change the look of striker
+	var c1 = document.getElementById("myCanvas");
+	var ctx1 = c1.getContext("2d");
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0, 2*Math.PI);
+	ctx.fillStyle="#FFFFFF";
+	ctx.strokeStyle = "#000000"
+	ctx.fill();
+	
+}
+
+function init(){
+	c = document.getElementById("myCanvas");
+	ctx = c.getContext("2d");
+	strikerX = 200;
+	strikerY = 318;
+	lineX = 200;
+	lineY = 40;
+	coin1X = 200;
+	coin1Y = 200;
+	setSteps();
+	shoot = false;
+	showLine = false;
+	return setInterval(draw,10);
+}
+
+function foul(){
+	alert("Foul");
+	shoot = false;
+	strikerX = 200;
+	strikerY = 318;
+}
+
+function draw(){
+	drawBoard();
+	//drawCoin(coin1X, coin1Y);//actually draws the coint
+	drawStriker(strikerX, strikerY);
+    if(shoot){
+		<!-- checks whether its inside the corner holes -->
+			<!-- inner rectangle : 40, radius of hole : 12 -->
+			if( strikerX < 40 + 24 - radius  && strikerY < 40 + 24 - radius ){
+				<!-- left corner -->
+				foul();
+			}else if(strikerX > 360 - 24 + radius && strikerY < 40 + 24 - radius){
+							<!--top right corner -->
+
+				foul();
+			}else if(strikerX < 40 + 24 - radius && strikerY > 360 - 24 + radius){
+				<!-- bottom left corner -->
+			
+			foul();
+			}else if(strikerX > 360 - 24 + radius && strikerY > 360 - 24 + radius){
+								<!--bottom right corner -->
+
+				foul();
+			}else{
+				<!-- just to test bouncing -->
+				if(strikerX + dx > 360 - radius  || strikerX + dx < 40 + radius ) {
+					//dx = dx - 1;
+					dx = -dx;
+				}
+				if(strikerY + dy > 360 - radius  || strikerY + dy < 40 + radius ) {
+					dy = -dy;
+				}		
+				<!-- end bouncing -->
+				dx*=friction;
+				dy*=friction;
+				strikerX += dx;
+				strikerY += dy;
+			}
+		showLine = false;
+	}	
+	if(showLine){
+		drawLine();
+	}
+}
+
+var drag = false;
+
+$("#myCanvas").mousedown(function (e) {
+	handleMouseDown(e);
+});
+
+$("#myCanvas").mouseup(function (e) {
+	handleMouseUp(e);
+});
+
+function handleMouseDown(e) {
+	console.log("striker Striker : " + strikerX + "," + strikerY);
+	mouseX = parseInt(e.clientX);
+	mouseY = parseInt(e.clientY);
+	//checks whether the mouse down is in the striker
+	if(!showLine){
+		if(mouseX >= strikerX - radius && mouseX <= strikerX + radius 
+		&& mouseY >= strikerY - radius && mouseY <= strikerY + radius){
+		console.log("moved   : mousex : " + mouseX + " mouseY : " + mouseY);
+		//strikerX = mouseX;
+		//	strikerY = mouseY;
+		drag = true;
+		c.onmousemove = handleMouseMove;		
+		}
+	}else{
+		drag = true;
+		c.onmousemove = handleMouseMove1;
+	}
+	
+}
+
+
+function handleMouseMove1(e){
+	if(drag){
+	lineX = parseInt(e.clientX);
+	lineY = parseInt(e.clientY);
+	//console.log("line : X : " + lineX +  " ,lineY : " + lineY);
+	setSteps();
+	}
+}
+
+function handleMouseMove(e){
+	if(drag){
+		x = parseInt(e.clientX);
+		y = parseInt(e.clientY);
+		if(x >=90 && x <= 307&& y >= 311 && y <= 325){
+			strikerX = x;
+			strikerY = y;
+		}
+	}
+}
+
+function handleMouseUp(e){
+	drag = false;
+	//handleMouseMove(e);
+}
+
+
+
+function strikerLine(){
+	if(showLine){
+		showLine = false;
+	}else{
+		showLine = true;
+	}
+}
+
+function drawLine(){
+	ctx.beginPath();
+	ctx.moveTo(strikerX, strikerY);
+	ctx.lineTo(lineX,lineY);
+	ctx.stroke();
+}
+function setShoot(){
+	if(shoot){
+		shoot = false;
+	}else{
+		shoot = true;
+	}
+}
+
+function setSteps(){
+	if( Math.abs(strikerX - lineX) > Math.abs(strikerY - lineY) ){
+		dx = ((lineX - strikerX) / Math.abs(strikerX - lineX));
+		dy = ((lineY - strikerY) / Math.abs(strikerX - lineX));
+	}else{
+		dx = ((lineX - strikerX) / Math.abs(strikerY - lineY));
+		dy = ((lineY - strikerY) / Math.abs(strikerY - lineY));
+	}
+	console.log("dx :" + dx + " ,dy:" + dy );
+}
+
+</script>
+</body>
+</html>
